@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require 'overrided_managed_auth'
+require 'lib/overrided_managed_auth'
 class OpenIDConnectAuthenticator < CustomAuth::OverridedManagedAuthenticator
   def name
     "rbxoidc"
