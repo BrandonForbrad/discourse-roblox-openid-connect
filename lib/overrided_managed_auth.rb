@@ -189,3 +189,4 @@ module CustomAuth
       end
     end
   end
+end
