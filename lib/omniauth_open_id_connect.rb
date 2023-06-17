@@ -196,6 +196,28 @@ module ::OmniAuth
 
       info do
         data_source = options.use_userinfo ? userinfo_response : id_token_info
+        verbose_log("Building info hash from data source\n\n#{data_source["sub"]}")
+        verbose_log("2Building info hash from data source\n\n#{data_source}")
+
+        if data_source["sub"]
+          connection = Faraday.new "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=#{data_source["sub"]}&size=352x352&format=Png&isCircular=false" do |conn|
+            conn.response :json, :content_type => /\bjson$/
+
+            conn.adapter Faraday.default_adapter
+          end
+
+          response = connection.get()
+          if response.status == 200
+            if response.body and response.body["data"] and response.body["data"][0]
+              data = response.body["data"][0]
+              if data["state"] == "Completed"
+                image = data["imageUrl"]
+                data_source["picture"] = image
+              end
+            end
+          end
+        end
+
         prune!(
           name: data_source["name"],
           email: data_source["email"],
