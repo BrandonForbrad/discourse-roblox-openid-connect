@@ -172,7 +172,7 @@ module CustomAuth
       # Check if the user has a custom avatar already AND the always_update_user_avatar? setting is false
       
       return if user.user_avatar.try(:custom_upload_id).present? && !always_update_user_avatar?
-      Jobs.enqueue(:download_avatar_from_url, url: url, user_id: user.id, override_gravatar: false)
+      Jobs.enqueue(:download_avatar_from_url, url: url, user_id: user.id, override_gravatar: true)
     end
 
     def retrieve_profile(user, info)

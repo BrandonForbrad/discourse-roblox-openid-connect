@@ -1,6 +1,7 @@
 # frozen_string_literal: true
-require_relative 'overrided_managed_auth'
-class OpenIDConnectAuthenticator < CustomAuth::OverridedManagedAuthenticator
+# require_relative 'overrided_managed_auth'
+# class OpenIDConnectAuthenticator < CustomAuth::OverridedManagedAuthenticator
+class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
   def name
     "rbxoidc"
   end
@@ -137,6 +138,14 @@ class OpenIDConnectAuthenticator < CustomAuth::OverridedManagedAuthenticator
                             builder.adapter FinalDestination::FaradayAdapter # make requests with FinalDestination::HTTP
                           end
                         }
+  end
+
+  def retrieve_avatar(user, url)
+    return unless user && url
+    # Check if the user has a custom avatar already AND the always_update_user_avatar? setting is false
+    
+    return if user.user_avatar.try(:custom_upload_id).present? && !always_update_user_avatar?
+    Jobs.enqueue(:download_avatar_from_url, url: url, user_id: user.id, override_gravatar: true)
   end
 
   def request_timeout_seconds
