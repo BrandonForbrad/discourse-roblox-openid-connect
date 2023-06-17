@@ -2,6 +2,6 @@ en:
   js:
     login:
       rbxoidc:
-        name: "OpenID Connect"
-        title: "with OpenID Connect"
-        message: "Authenticating with OpenID Connect"
+        name: "RBX OpenID Connect"
+        title: "with RBX OpenID Connect"
+        message: "Authenticating with RBX OpenID Connect"
