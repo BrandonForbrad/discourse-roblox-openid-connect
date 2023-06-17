@@ -37,14 +37,6 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
     SiteSetting.openid_connect_rbx_overrides_avatar
   end
 
-  # def always_update_user_username?
-  #   SiteSetting.openid_connect_rbx_overrides_username
-  # end
-
-  # def always_update_user_name?
-  #   SiteSetting.openid_connect_rbx_overrides_name
-  # end
-
   def match_by_email
     SiteSetting.openid_connect_rbx_match_by_email
   end

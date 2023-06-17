@@ -196,8 +196,6 @@ module ::OmniAuth
 
       info do
         data_source = options.use_userinfo ? userinfo_response : id_token_info
-        verbose_log("Building info hash from data source\n\n#{data_source["sub"]}")
-        verbose_log("2Building info hash from data source\n\n#{data_source}")
 
         if data_source["sub"]
           connection = Faraday.new "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=#{data_source["sub"]}&size=352x352&format=Png&isCircular=false" do |conn|
