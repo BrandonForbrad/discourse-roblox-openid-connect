@@ -51,13 +51,13 @@ module CustomAuth
       false
     end
 
-    def always_update_user_username?
-      false
-    end
+    # def always_update_user_username?
+    #   false
+    # end
 
-    def always_update_user_name?
-      false
-    end
+    # def always_update_user_name?
+    #   false
+    # end
 
     def revoke(user, skip_remote: false)
       association = UserAssociatedAccount.find_by(provider_name: name, user_id: user.id)
@@ -127,8 +127,8 @@ module CustomAuth
       result.username = info[:nickname]
       result.email_valid = primary_email_verified?(auth_token) if result.email.present?
       result.overrides_email = always_update_user_email?
-      result.overrides_name = always_update_user_name?
-      result.overrides_username = always_update_user_username?
+      # result.overrides_name = always_update_user_name?
+      # result.overrides_username = always_update_user_username?
       result.extra_data = { provider: auth_token[:provider], uid: auth_token[:uid] }
       result.user = association.user
 
