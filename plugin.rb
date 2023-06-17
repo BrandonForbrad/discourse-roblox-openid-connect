@@ -10,7 +10,7 @@
 enabled_site_setting :openid_connect_rbx_enabled
 
 require_relative "lib/openid_connect_faraday_formatter"
-require_relative "lib/overrided_managed_auth"
+# require_relative "lib/overrided_managed_auth"
 require_relative "lib/omniauth_open_id_connect"
 require_relative "lib/openid_connect_authenticator"
 
