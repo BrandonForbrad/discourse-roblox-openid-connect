@@ -15,10 +15,10 @@ plugins:
     default: false
   openid_connect_rbx_overrides_email:
     default: false
-  openid_connect_rbx_overrides_name:
-    default: false
-  openid_connect_rbx_overrides_username:
-    default: false
+  # openid_connect_rbx_overrides_name:
+  #   default: false
+  # openid_connect_rbx_overrides_username:
+  #   default: false
   openid_connect_rbx_overrides_avatar:
     default: false
   openid_connect_rbx_authorize_scope:
@@ -39,4 +39,4 @@ plugins:
     default: ""
     textarea: true
   openid_connect_rbx_match_by_email:
-    default: true
+    default: false

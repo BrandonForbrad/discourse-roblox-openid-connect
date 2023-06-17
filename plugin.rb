@@ -1,16 +1,15 @@
 # frozen_string_literal: true
 
-# name: discourse-openid-connect
+# name: discourse-roblox-openid-connect
 # about: Add support for openid-connect as a login provider
 # version: 1.0
-# authors: David Taylor
-# url: https://github.com/discourse/discourse-openid-connect
+# authors: David Taylor (Edited by Headless)
+# url: https://github.com/Djboy08/discourse-roblox-openid-connect
 # transpile_js: true
 
 enabled_site_setting :openid_connect_rbx_enabled
 
 require_relative "lib/openid_connect_faraday_formatter"
-# require_relative "lib/overrided_managed_auth"
 require_relative "lib/omniauth_open_id_connect"
 require_relative "lib/openid_connect_authenticator"
 

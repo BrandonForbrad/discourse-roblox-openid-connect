@@ -3,7 +3,7 @@
 require_relative "../../lib/omniauth_open_id_connect"
 require "rails_helper"
 
-describe OmniAuth::Strategies::OpenIDConnect do
+describe OmniAuth::Strategies::OpenIDConnectRBX do
   let(:app) do
     @app_called = false
     lambda do |*args|
@@ -22,7 +22,7 @@ describe OmniAuth::Strategies::OpenIDConnect do
   end
 
   subject do
-    OmniAuth::Strategies::OpenIDConnect.new(
+    OmniAuth::Strategies::OpenIDConnectRBX.new(
       app,
       "appid",
       "secret",
@@ -36,13 +36,13 @@ describe OmniAuth::Strategies::OpenIDConnect do
 
   it "throws error for missing discovery document" do
     strategy =
-      OmniAuth::Strategies::OpenIDConnect.new(app, "appid", "secret", discovery_document: nil)
-    expect { strategy.discover! }.to raise_error(::OmniAuth::OpenIDConnect::DiscoveryError)
+      OmniAuth::Strategies::OpenIDConnectRBX.new(app, "appid", "secret", discovery_document: nil)
+    expect { strategy.discover! }.to raise_error(::OmniAuth::OpenIDConnectRBX::DiscoveryError)
   end
 
   it "throws error for invalid discovery document" do
     discovery_document.delete("authorization_endpoint")
-    expect { subject.discover! }.to raise_error(::OmniAuth::OpenIDConnect::DiscoveryError)
+    expect { subject.discover! }.to raise_error(::OmniAuth::OpenIDConnectRBX::DiscoveryError)
   end
 
   it "disables userinfo if not included in discovery document" do
@@ -243,7 +243,7 @@ describe OmniAuth::Strategies::OpenIDConnect do
           callback_response = subject.callback_phase
           expect(callback_response[0]).to eq(302)
           expect(callback_response[1]["Location"]).to eq(
-            "/auth/failure?message=openid_connect_sub_mismatch&strategy=openidconnect",
+            "/auth/failure?message=openid_connect_sub_mismatch&strategy=openidconnectrbx",
           )
           expect(@app_called).to eq(false)
         end

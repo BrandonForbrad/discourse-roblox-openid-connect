@@ -88,7 +88,7 @@ class OpenIDConnectAuthenticator < CustomAuth::OverridedManagedAuthenticator
   end
 
   def register_middleware(omniauth)
-    omniauth.provider :openid_connect,
+    omniauth.provider :openid_connect_rbx,
                       name: :rbxoidc,
                       error_handler:
                         lambda { |error, message|
