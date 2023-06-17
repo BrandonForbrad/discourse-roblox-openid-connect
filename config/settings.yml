@@ -2,7 +2,7 @@ plugins:
   openid_connect_rbx_enabled:
     default: false
   openid_connect_rbx_discovery_document:
-    default: ""
+    default: "https://apis.roblox.com/oauth/.well-known/openid-configuration"
   openid_connect_rbx_client_id:
     default: ""
   openid_connect_rbx_client_secret:
