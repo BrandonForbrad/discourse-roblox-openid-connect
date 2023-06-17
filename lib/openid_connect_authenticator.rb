@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
+class OpenIDConnectAuthenticator < Auth::OverridedManagedAuthenticator
   def name
-    "oidc"
+    "rbxoidc"
   end
 
   def can_revoke?
-    SiteSetting.openid_connect_allow_association_change
+    SiteSetting.openid_connect_rbx_allow_association_change
   end
 
   def can_connect_existing_user?
-    SiteSetting.openid_connect_allow_association_change
+    SiteSetting.openid_connect_rbx_allow_association_change
   end
 
   def enabled?
-    SiteSetting.openid_connect_enabled
+    SiteSetting.openid_connect_rbx_enabled
   end
 
   def primary_email_verified?(auth)
@@ -29,15 +29,27 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
   end
 
   def always_update_user_email?
-    SiteSetting.openid_connect_overrides_email
+    SiteSetting.openid_connect_rbx_overrides_email
+  end
+
+  def always_update_user_avatar?
+    SiteSetting.openid_connect_rbx_overrides_avatar
+  end
+
+  def always_update_user_username?
+    SiteSetting.openid_connect_rbx_overrides_username
+  end
+
+  def always_update_user_name?
+    SiteSetting.openid_connect_rbx_overrides_name
   end
 
   def match_by_email
-    SiteSetting.openid_connect_match_by_email
+    SiteSetting.openid_connect_rbx_match_by_email
   end
 
   def discovery_document
-    document_url = SiteSetting.openid_connect_discovery_document.presence
+    document_url = SiteSetting.openid_connect_rbx_discovery_document.presence
     if !document_url
       oidc_log("No discovery document URL specified", error: true)
       return
@@ -69,18 +81,18 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
 
   def oidc_log(message, error: false)
     if error
-      Rails.logger.error("OIDC Log: #{message}")
-    elsif SiteSetting.openid_connect_verbose_logging
-      Rails.logger.warn("OIDC Log: #{message}")
+      Rails.logger.error("RBXOIDC Log: #{message}")
+    elsif SiteSetting.openid_connect_rbx_verbose_logging
+      Rails.logger.warn("RBXOIDC Log: #{message}")
     end
   end
 
   def register_middleware(omniauth)
     omniauth.provider :openid_connect,
-                      name: :oidc,
+                      name: :rbxoidc,
                       error_handler:
                         lambda { |error, message|
-                          handlers = SiteSetting.openid_connect_error_redirects.split("\n")
+                          handlers = SiteSetting.openid_connect_rbx_error_redirects.split("\n")
                           handlers.each do |row|
                             parts = row.split("|")
                             return parts[1] if message.include? parts[0]
@@ -95,17 +107,17 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
                           token_params = {}
                           token_params[
                             :scope
-                          ] = SiteSetting.openid_connect_token_scope if SiteSetting.openid_connect_token_scope.present?
+                          ] = SiteSetting.openid_connect_rbx_token_scope if SiteSetting.openid_connect_rbx_token_scope.present?
 
                           opts.deep_merge!(
-                            client_id: SiteSetting.openid_connect_client_id,
-                            client_secret: SiteSetting.openid_connect_client_secret,
+                            client_id: SiteSetting.openid_connect_rbx_client_id,
+                            client_secret: SiteSetting.openid_connect_rbx_client_secret,
                             discovery_document: discovery_document,
-                            scope: SiteSetting.openid_connect_authorize_scope,
+                            scope: SiteSetting.openid_connect_rbx_authorize_scope,
                             token_params: token_params,
                             passthrough_authorize_options:
-                              SiteSetting.openid_connect_authorize_parameters.split("|"),
-                            claims: SiteSetting.openid_connect_claims,
+                              SiteSetting.openid_connect_rbx_authorize_parameters.split("|"),
+                            claims: SiteSetting.openid_connect_rbx_claims,
                           )
 
                           opts[:client_options][:connection_opts] = {
@@ -115,7 +127,7 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
                           }
 
                           opts[:client_options][:connection_build] = lambda do |builder|
-                            if SiteSetting.openid_connect_verbose_logging
+                            if SiteSetting.openid_connect_rbx_verbose_logging
                               builder.response :logger,
                                                Rails.logger,
                                                { bodies: true, formatter: OIDCFaradayFormatter }
@@ -128,6 +140,6 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
   end
 
   def request_timeout_seconds
-    GlobalSetting.openid_connect_request_timeout_seconds
+    GlobalSetting.openid_connect_rbx_request_timeout_seconds
   end
 end

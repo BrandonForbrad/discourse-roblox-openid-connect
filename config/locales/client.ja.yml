@@ -7,7 +7,7 @@
 ja:
   js:
     login:
-      oidc:
+      rbxoidc:
         name: "OpenID Connect"
         title: "OpenID Connect"
         message: "OpenID Connect で認証"

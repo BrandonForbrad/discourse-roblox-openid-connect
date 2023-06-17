@@ -7,7 +7,7 @@
 fi:
   js:
     login:
-      oidc:
+      rbxoidc:
         name: "OpenID Connect"
         title: "OpenID Connectilla"
         message: "Todennus OpenID Connectilla"

@@ -7,7 +7,7 @@
 pt_BR:
   js:
     login:
-      oidc:
+      rbxoidc:
         name: "OpenID Connect"
         title: "com OpenID Connect"
         message: "Autenticação com OpenID Connect"

@@ -8,7 +8,7 @@ describe OpenIDConnectAuthenticator do
   fab!(:user) { Fabricate(:user) }
   let(:hash) do
     OmniAuth::AuthHash.new(
-      provider: "oidc",
+      provider: "rbxoidc",
       uid: "123456789",
       info: {
         name: "John Doe",
@@ -63,7 +63,7 @@ describe OpenIDConnectAuthenticator do
 
   context "when match_by_email is false" do
     it "does not match the user" do
-      SiteSetting.openid_connect_match_by_email = false
+      SiteSetting.openid_connect_rbx_match_by_email = false
       result = authenticator.after_authenticate(hash)
       expect(result.user).to eq(nil)
     end
@@ -71,7 +71,7 @@ describe OpenIDConnectAuthenticator do
 
   describe "discovery document fetching" do
     let(:document_url) do
-      SiteSetting.openid_connect_discovery_document =
+      SiteSetting.openid_connect_rbx_discovery_document =
         "https://id.example.com/.well-known/openid-configuration"
     end
     let(:document) do

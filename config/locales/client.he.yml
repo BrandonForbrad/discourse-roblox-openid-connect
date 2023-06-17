@@ -7,7 +7,7 @@
 he:
   js:
     login:
-      oidc:
+      rbxoidc:
         name: "OpenID Connect"
         title: "עם OpenID Connect"
         message: "אימות דרך OpenID Connect"

@@ -186,7 +186,7 @@ module ::OmniAuth
         id_token_sub = id_token_info["sub"]
         if userinfo_sub != id_token_sub
           raise SubVerifyError.new(
-                  "OIDC `sub` mismatch. ID Token value: #{id_token_sub.inspect}. UserInfo value: #{userinfo_sub.inspect}",
+                  "RBXOIDC `sub` mismatch. ID Token value: #{id_token_sub.inspect}. UserInfo value: #{userinfo_sub.inspect}",
                 )
         end
         @raw_info

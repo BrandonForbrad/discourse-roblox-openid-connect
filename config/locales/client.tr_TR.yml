@@ -7,7 +7,7 @@
 tr_TR:
   js:
     login:
-      oidc:
+      rbxoidc:
         name: "OpenID Connect"
         title: "OpenID Connect ile"
         message: "OpenID Connect ile Kimlik Doğrulama"

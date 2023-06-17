@@ -7,22 +7,23 @@
 # url: https://github.com/discourse/discourse-openid-connect
 # transpile_js: true
 
-enabled_site_setting :openid_connect_enabled
+enabled_site_setting :openid_connect_rbx_enabled
 
 require_relative "lib/openid_connect_faraday_formatter"
+require_relative "lib/overrided_managed_auth"
 require_relative "lib/omniauth_open_id_connect"
 require_relative "lib/openid_connect_authenticator"
 
-GlobalSetting.add_default :openid_connect_request_timeout_seconds, 10
+GlobalSetting.add_default :openid_connect_rbx_request_timeout_seconds, 10
 
 # RP-initiated logout
 # https://openid.net/specs/openid-connect-rpinitiated-1_0.html
 on(:before_session_destroy) do |data|
-  next if !SiteSetting.openid_connect_rp_initiated_logout
+  next if !SiteSetting.openid_connect_rbx_rp_initiated_logout
 
   authenticator = OpenIDConnectAuthenticator.new
 
-  oidc_record = data[:user]&.user_associated_accounts&.find_by(provider_name: "oidc")
+  oidc_record = data[:user]&.user_associated_accounts&.find_by(provider_name: "rbxoidc")
   if !oidc_record
     authenticator.oidc_log "Logout: No oidc user_associated_account record for user"
     next
@@ -54,7 +55,7 @@ on(:before_session_destroy) do |data|
 
   params << ["id_token_hint", token]
 
-  post_logout_redirect = SiteSetting.openid_connect_rp_initiated_logout_redirect.presence
+  post_logout_redirect = SiteSetting.openid_connect_rbx_rp_initiated_logout_redirect.presence
   params << ["post_logout_redirect_uri", post_logout_redirect] if post_logout_redirect
 
   uri.query = URI.encode_www_form(params)

@@ -7,7 +7,7 @@
 ru:
   js:
     login:
-      oidc:
+      rbxoidc:
         name: "OpenID Connect"
         title: "через OpenID Connect"
         message: "Аутентификация через OpenID Connect"

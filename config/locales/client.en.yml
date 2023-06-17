@@ -1,7 +1,7 @@
 en:
   js:
     login:
-      oidc:
+      rbxoidc:
         name: "OpenID Connect"
         title: "with OpenID Connect"
         message: "Authenticating with OpenID Connect"

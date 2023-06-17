@@ -7,7 +7,7 @@
 ar:
   js:
     login:
-      oidc:
+      rbxoidc:
         name: "OpenID Connect"
         title: "باستخدام OpenID Connect"
         message: "المصادقة باستخدام OpenID Connect"
