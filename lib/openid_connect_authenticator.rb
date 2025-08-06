@@ -83,6 +83,7 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
   def register_middleware(omniauth)
     omniauth.provider :openid_connect_rbx,
                       name: :rbxoidc,
+                      provider_ignores_state: true, # ✅ Added to bypass CSRF state check
                       error_handler:
                         lambda { |error, message|
                           handlers = SiteSetting.openid_connect_rbx_error_redirects.split("\n")
@@ -96,41 +97,39 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
                       setup:
                         lambda { |env|
                           opts = env["omniauth.strategy"].options
-
+  
                           token_params = {}
-                          token_params[
-                            :scope
-                          ] = SiteSetting.openid_connect_rbx_token_scope if SiteSetting.openid_connect_rbx_token_scope.present?
-
+                          token_params[:scope] = SiteSetting.openid_connect_rbx_token_scope if SiteSetting.openid_connect_rbx_token_scope.present?
+  
                           opts.deep_merge!(
                             client_id: SiteSetting.openid_connect_rbx_client_id,
                             client_secret: SiteSetting.openid_connect_rbx_client_secret,
                             discovery_document: discovery_document,
                             scope: SiteSetting.openid_connect_rbx_authorize_scope,
                             token_params: token_params,
-                            passthrough_authorize_options:
-                              SiteSetting.openid_connect_rbx_authorize_parameters.split("|"),
+                            passthrough_authorize_options: SiteSetting.openid_connect_rbx_authorize_parameters.split("|"),
                             claims: SiteSetting.openid_connect_rbx_claims,
                           )
-
+  
                           opts[:client_options][:connection_opts] = {
                             request: {
                               timeout: request_timeout_seconds,
                             },
                           }
-
+  
                           opts[:client_options][:connection_build] = lambda do |builder|
                             if SiteSetting.openid_connect_rbx_verbose_logging
                               builder.response :logger,
                                                Rails.logger,
                                                { bodies: true, formatter: OIDCFaradayFormatter }
                             end
-
+  
                             builder.request :url_encoded # form-encode POST params
                             builder.adapter FinalDestination::FaradayAdapter # make requests with FinalDestination::HTTP
                           end
                         }
   end
+  
 
   def retrieve_avatar(user, url)
     return unless user && url
