@@ -81,54 +81,68 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
   end
 
   def register_middleware(omniauth)
+    @@used_codes ||= Set.new
+  
+    omniauth.before_request_phase do |env|
+      code = Rack::Request.new(env).params['code']
+      if code && @@used_codes.include?(code)
+        Rails.logger.warn("RBXOIDC: Skipping duplicate code #{code}")
+        throw(:halt, [302, { 'Location' => '/auth/failure?message=invalid_grant&strategy=rbxoidc' }, []])
+      end
+    end
+  
+    omniauth.after_callback_phase do |env|
+      code = Rack::Request.new(env).params['code']
+      @@used_codes.add(code) if code
+    end
+  
     omniauth.provider :openid_connect_rbx,
                       name: :rbxoidc,
-                      provider_ignores_state: true, # ✅ Added to bypass CSRF state check
-                      error_handler:
-                        lambda { |error, message|
-                          handlers = SiteSetting.openid_connect_rbx_error_redirects.split("\n")
-                          handlers.each do |row|
-                            parts = row.split("|")
-                            return parts[1] if message.include? parts[0]
-                          end
-                          nil
-                        },
+                      provider_ignores_state: true, # ✅ Bypass CSRF state check
+                      error_handler: lambda { |error, message|
+                        handlers = SiteSetting.openid_connect_rbx_error_redirects.split("\n")
+                        handlers.each do |row|
+                          parts = row.split("|")
+                          return parts[1] if message.include? parts[0]
+                        end
+                        nil
+                      },
                       verbose_logger: lambda { |message| oidc_log(message) },
-                      setup:
-                        lambda { |env|
-                          opts = env["omniauth.strategy"].options
+                      setup: lambda { |env|
+                        opts = env["omniauth.strategy"].options
   
-                          token_params = {}
-                          token_params[:scope] = SiteSetting.openid_connect_rbx_token_scope if SiteSetting.openid_connect_rbx_token_scope.present?
+                        token_params = {}
+                        if SiteSetting.openid_connect_rbx_token_scope.present?
+                          token_params[:scope] = SiteSetting.openid_connect_rbx_token_scope
+                        end
   
-                          opts.deep_merge!(
-                            client_id: SiteSetting.openid_connect_rbx_client_id,
-                            client_secret: SiteSetting.openid_connect_rbx_client_secret,
-                            discovery_document: discovery_document,
-                            scope: SiteSetting.openid_connect_rbx_authorize_scope,
-                            token_params: token_params,
-                            passthrough_authorize_options: SiteSetting.openid_connect_rbx_authorize_parameters.split("|"),
-                            claims: SiteSetting.openid_connect_rbx_claims,
-                          )
+                        opts.deep_merge!(
+                          client_id: SiteSetting.openid_connect_rbx_client_id,
+                          client_secret: SiteSetting.openid_connect_rbx_client_secret,
+                          discovery_document: discovery_document,
+                          scope: SiteSetting.openid_connect_rbx_authorize_scope,
+                          token_params: token_params,
+                          passthrough_authorize_options: SiteSetting.openid_connect_rbx_authorize_parameters.split("|"),
+                          claims: SiteSetting.openid_connect_rbx_claims,
+                        )
   
-                          opts[:client_options][:connection_opts] = {
-                            request: {
-                              timeout: request_timeout_seconds,
-                            },
-                          }
-  
-                          opts[:client_options][:connection_build] = lambda do |builder|
-                            if SiteSetting.openid_connect_rbx_verbose_logging
-                              builder.response :logger,
-                                               Rails.logger,
-                                               { bodies: true, formatter: OIDCFaradayFormatter }
-                            end
-  
-                            builder.request :url_encoded # form-encode POST params
-                            builder.adapter FinalDestination::FaradayAdapter # make requests with FinalDestination::HTTP
-                          end
+                        opts[:client_options][:connection_opts] = {
+                          request: { timeout: request_timeout_seconds }
                         }
+  
+                        opts[:client_options][:connection_build] = lambda do |builder|
+                          if SiteSetting.openid_connect_rbx_verbose_logging
+                            builder.response :logger,
+                                             Rails.logger,
+                                             { bodies: true, formatter: OIDCFaradayFormatter }
+                          end
+  
+                          builder.request :url_encoded
+                          builder.adapter FinalDestination::FaradayAdapter
+                        end
+                      }
   end
+  
   
 
   def retrieve_avatar(user, url)
