@@ -1,6 +1,4 @@
 # frozen_string_literal: true
-# require_relative 'overrided_managed_auth'
-# class OpenIDConnectAuthenticator < CustomAuth::OverridedManagedAuthenticator
 class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
   def name
     "rbxoidc"
@@ -20,11 +18,9 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
 
   def primary_email_verified?(auth)
     supplied_verified_boolean = auth["extra"]["raw_info"]["email_verified"]
-    # If the payload includes the email_verified boolean, use it. Otherwise assume true
     if supplied_verified_boolean.nil?
       true
     else
-      # Many providers violate the spec, and send this as a string rather than a boolean
       supplied_verified_boolean == true || supplied_verified_boolean == "true"
     end
   end
@@ -50,21 +46,19 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
 
     from_cache = true
     result =
-      Discourse
-        .cache
-        .fetch("openid-connect-discovery-#{document_url}", expires_in: 10.minutes) do
-          from_cache = false
-          oidc_log("Fetching discovery document from #{document_url}")
-          connection =
-            Faraday.new(request: { timeout: request_timeout_seconds }) do |c|
-              c.use Faraday::Response::RaiseError
-              c.adapter FinalDestination::FaradayAdapter
-            end
-          JSON.parse(connection.get(document_url).body)
-        rescue Faraday::Error, JSON::ParserError => e
-          oidc_log("Fetching discovery document raised error #{e.class} #{e.message}", error: true)
-          nil
-        end
+      Discourse.cache.fetch("openid-connect-discovery-#{document_url}", expires_in: 10.minutes) do
+        from_cache = false
+        oidc_log("Fetching discovery document from #{document_url}")
+        connection =
+          Faraday.new(request: { timeout: request_timeout_seconds }) do |c|
+            c.use Faraday::Response::RaiseError
+            c.adapter FinalDestination::FaradayAdapter
+          end
+        JSON.parse(connection.get(document_url).body)
+      rescue Faraday::Error, JSON::ParserError => e
+        oidc_log("Fetching discovery document raised error #{e.class} #{e.message}", error: true)
+        nil
+      end
 
     oidc_log("Discovery document loaded from cache") if from_cache
     oidc_log("Discovery document is\n\n#{result.to_yaml}")
@@ -82,23 +76,19 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
 
   def register_middleware(omniauth)
     @@used_codes ||= Set.new
-  
-    omniauth.before_request_phase do |env|
+
+    OmniAuth.config.before_callback_phase do |env|
       code = Rack::Request.new(env).params['code']
       if code && @@used_codes.include?(code)
         Rails.logger.warn("RBXOIDC: Skipping duplicate code #{code}")
         throw(:halt, [302, { 'Location' => '/auth/failure?message=invalid_grant&strategy=rbxoidc' }, []])
       end
-    end
-  
-    omniauth.after_callback_phase do |env|
-      code = Rack::Request.new(env).params['code']
       @@used_codes.add(code) if code
     end
-  
+
     omniauth.provider :openid_connect_rbx,
                       name: :rbxoidc,
-                      provider_ignores_state: true, # ✅ Bypass CSRF state check
+                      provider_ignores_state: true, # ✅ bypass CSRF
                       error_handler: lambda { |error, message|
                         handlers = SiteSetting.openid_connect_rbx_error_redirects.split("\n")
                         handlers.each do |row|
@@ -110,12 +100,10 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
                       verbose_logger: lambda { |message| oidc_log(message) },
                       setup: lambda { |env|
                         opts = env["omniauth.strategy"].options
-  
+
                         token_params = {}
-                        if SiteSetting.openid_connect_rbx_token_scope.present?
-                          token_params[:scope] = SiteSetting.openid_connect_rbx_token_scope
-                        end
-  
+                        token_params[:scope] = SiteSetting.openid_connect_rbx_token_scope if SiteSetting.openid_connect_rbx_token_scope.present?
+
                         opts.deep_merge!(
                           client_id: SiteSetting.openid_connect_rbx_client_id,
                           client_secret: SiteSetting.openid_connect_rbx_client_secret,
@@ -125,30 +113,26 @@ class OpenIDConnectAuthenticator < Auth::ManagedAuthenticator
                           passthrough_authorize_options: SiteSetting.openid_connect_rbx_authorize_parameters.split("|"),
                           claims: SiteSetting.openid_connect_rbx_claims,
                         )
-  
+
                         opts[:client_options][:connection_opts] = {
                           request: { timeout: request_timeout_seconds }
                         }
-  
+
                         opts[:client_options][:connection_build] = lambda do |builder|
                           if SiteSetting.openid_connect_rbx_verbose_logging
                             builder.response :logger,
                                              Rails.logger,
                                              { bodies: true, formatter: OIDCFaradayFormatter }
                           end
-  
+
                           builder.request :url_encoded
                           builder.adapter FinalDestination::FaradayAdapter
                         end
                       }
   end
-  
-  
 
   def retrieve_avatar(user, url)
     return unless user && url
-    # Check if the user has a custom avatar already AND the always_update_user_avatar? setting is false
-    
     return if user.user_avatar.try(:custom_upload_id).present? && !always_update_user_avatar?
     Jobs.enqueue(:download_avatar_from_url, url: url, user_id: user.id, override_gravatar: true)
   end
